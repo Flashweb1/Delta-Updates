@@ -1,6 +1,7 @@
 import { useTheme } from '../../contexts/ThemeContext'
 import { Sun, Moon, Bookmark, Menu, X, Search, LogIn, CloudSun, Globe } from 'lucide-react'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 
 interface MastheadProps {
   onNavigate: (path: string) => void
@@ -128,14 +129,16 @@ export default function Masthead({ onNavigate }: MastheadProps) {
         </div>
       </div>
 
-      {/* Mobile Nav Overlay */}
-      {menuOpen && (
-        <div
-          className="mobile-nav-overlay"
-          onClick={() => setMenuOpen(false)}
-          role="dialog"
-          aria-label="Navigation menu"
-        >
+      {/* Mobile Nav Overlay — portal to body so header backdrop-filter doesn't clip the fixed layer */}
+      {typeof document !== 'undefined' &&
+        menuOpen &&
+        createPortal(
+          <div
+            className="mobile-nav-overlay"
+            onClick={() => setMenuOpen(false)}
+            role="dialog"
+            aria-label="Navigation menu"
+          >
           <nav
             className="mobile-nav-panel"
             id="mobile-nav-panel"
@@ -277,7 +280,8 @@ export default function Masthead({ onNavigate }: MastheadProps) {
               </button>
             </div>
           </nav>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   )
