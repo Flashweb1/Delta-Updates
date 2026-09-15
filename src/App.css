@@ -228,7 +228,7 @@
   z-index: 10;
 }
 .theme-toggle-btn:hover .btn-tooltip { opacity: 1; }
-.mobile-menu { display: none; }
+.mobile-menu, .mobile-search-btn { display: none; }
 
 /* Mobile nav overlay */
 .mobile-nav-overlay {
@@ -253,18 +253,27 @@
   cursor: pointer;
 }
 .mobile-nav-panel a:hover { background: var(--paper-2); }
-
-@media (max-width: 768px) {
-  .mobile-menu { display: flex; }
-  .utility-weather, .utility-edition { display: none; }
+.mobile-nav-footer {
+  margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 0.25rem;
 }
+.mobile-nav-action {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.9375rem;
+  font-weight: 500; color: var(--ink); transition: background var(--transition);
+  cursor: pointer; background: none; border: none; text-align: left; font-family: inherit;
+}
+.mobile-nav-action:hover { background: var(--paper-2); }
 
-/* On very small screens prefer the masthead main hamburger over the top utility one */
-@media (max-width: 640px) {
-  .masthead-utility-bar .mobile-menu { display: none; }
-  .masthead-main .mobile-menu { display: inline-flex; }
-  .masthead-main .main-mobile-menu { display: inline-flex; }
-  .masthead-utility-bar { padding-top: 0.55rem; padding-bottom: 0.55rem; }
+/* Mobile: single compact header row — hamburger, centered logo, search */
+@media (max-width: 768px) {
+  .masthead-utility-bar { display: none; }
+  .masthead-side-block.left, .masthead-side-block.right { display: none; }
+  .masthead-main { padding: 0.75rem 0.85rem; }
+  .masthead-main-inner { justify-content: space-between; }
+  .masthead-main .logo { margin: 0; text-align: center; }
+  .masthead-main .logo-text { font-size: clamp(1.4rem, 5.5vw, 2rem); }
+  .mobile-menu, .mobile-search-btn { display: inline-flex; flex-shrink: 0; }
 }
 
 /* ═══════════════════════════════════════════════════════════

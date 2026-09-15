@@ -25,36 +25,6 @@
   }
 
   .container {
-
-/* Very small phones: declutter header and stack controls */
-@media (max-width: 420px) {
-  /* hide the top utility bar entirely to save vertical space */
-  .masthead-utility-bar { display: none; }
-
-  /* stack masthead content vertically and center */
-  .masthead-main { padding: 0.6rem 0.75rem; }
-  .masthead-main-inner { flex-direction: column; align-items: center; gap: 0.5rem; }
-
-  /* hide left side content (taglines) */
-  .masthead-side-block.left { display: none; }
-
-  /* ensure right side controls center and wrap cleanly */
-  .masthead-side-block.right { display: flex; justify-content: center; gap: 0.6rem; width: 100%; }
-
-  /* ordering: logo first, hamburger second, CTA buttons below */
-  .masthead-main .logo { order: 0; }
-  .main-mobile-menu { order: 1; }
-  .masthead-newsletter-btn { order: 2; }
-  .masthead-login-btn { order: 3; }
-
-  /* make CTAs full-width but visually balanced */
-  .masthead-newsletter-btn, .masthead-login-btn {
-    padding: 0.5rem 0.85rem; font-size: 0.95rem; border-radius: 999px;
-  }
-
-  /* hide utility icons (theme/bookmark) to avoid crowding */
-  .utility-right .icon-btn { display: none; }
-}
     padding: 0 var(--space-5);
   }
 

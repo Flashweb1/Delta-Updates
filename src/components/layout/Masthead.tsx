@@ -1,5 +1,5 @@
 import { useTheme } from '../../contexts/ThemeContext'
-import { Sun, Moon, Bookmark, Menu, X, CloudSun, Globe } from 'lucide-react'
+import { Sun, Moon, Bookmark, Menu, X, Search, LogIn, CloudSun, Globe } from 'lucide-react'
 import { useState } from 'react'
 
 interface MastheadProps {
@@ -57,15 +57,6 @@ export default function Masthead({ onNavigate }: MastheadProps) {
             >
               <Bookmark size={16} aria-hidden="true" />
             </button>
-            <button
-              className="icon-btn mobile-menu"
-              onClick={() => setMenuOpen(!menuOpen)}
-              aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-              aria-expanded={menuOpen}
-              aria-controls="mobile-nav-panel"
-            >
-              {menuOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
-            </button>
           </div>
         </div>
       </div>
@@ -73,6 +64,16 @@ export default function Masthead({ onNavigate }: MastheadProps) {
       {/* Main Masthead Banner */}
       <div className="masthead-main">
         <div className="masthead-main-inner">
+          <button
+            className="icon-btn mobile-menu"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav-panel"
+          >
+            {menuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+          </button>
+
           <div className="masthead-side-block left">
             <span className="masthead-tagline-text">Independent Journalism</span>
             <span className="masthead-tagline-sub">Integrity • Truth • Speed</span>
@@ -91,15 +92,6 @@ export default function Masthead({ onNavigate }: MastheadProps) {
           </button>
 
           <div className="masthead-side-block right">
-            <button
-              className="icon-btn mobile-menu main-mobile-menu"
-              onClick={() => setMenuOpen(!menuOpen)}
-              aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-              aria-expanded={menuOpen}
-              aria-controls="mobile-nav-panel"
-            >
-              {menuOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
-            </button>
             <button
               type="button"
               className="masthead-newsletter-btn"
@@ -123,6 +115,16 @@ export default function Masthead({ onNavigate }: MastheadProps) {
               Login
             </button>
           </div>
+
+          <button
+            type="button"
+            className="icon-btn mobile-search-btn"
+            onClick={() => onNavigate('/search')}
+            aria-label="Open search"
+            title="Search"
+          >
+            <Search size={18} aria-hidden="true" />
+          </button>
         </div>
       </div>
 
@@ -251,6 +253,29 @@ export default function Masthead({ onNavigate }: MastheadProps) {
             >
               Saved Bookmarks
             </a>
+
+            <div className="mobile-nav-footer">
+              <button
+                type="button"
+                className="mobile-nav-action"
+                onClick={() => {
+                  onNavigate('/admin/login')
+                  setMenuOpen(false)
+                }}
+              >
+                <LogIn size={16} aria-hidden="true" />
+                Login
+              </button>
+              <button
+                type="button"
+                className="mobile-nav-action"
+                onClick={toggle}
+                aria-pressed={isDark}
+              >
+                {isDark ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+                {isDark ? 'Light mode' : 'Dark mode'}
+              </button>
+            </div>
           </nav>
         </div>
       )}
