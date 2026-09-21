@@ -221,7 +221,7 @@ as $$
   or lower(coalesce(auth.jwt() ->> 'email', '')) = any(
        coalesce((select s.admin_emails from public.site_config s where s.id = 1), '{}'::text[])
      )
-  or lower(coalesce(auth.jwt() ->> 'email', '')) = 'admin@deltaupdates.com';
+  or lower(coalesce(auth.jwt() ->> 'email', '')) = 'ajikesamuel4@gmail.com';
 $$;
 
 -- ============================================================
@@ -445,7 +445,7 @@ values (1, 'Delta Update', 'Information for living',
   'editor@deltaupdates.com', 'https://facebook.com/deltaupdates', 'https://twitter.com/deltaupdates',
   'https://instagram.com/deltaupdates', '', 'News',
   'Delta Update delivers premium journalism covering politics, business, technology, and more from Nigeria and around the world.',
-  'https://deltaupdates.vercel.app', array['admin@deltaupdates.com']::text[])
+  'https://deltaupdates.vercel.app', array['ajikesamuel4@gmail.com']::text[])
 on conflict (id) do nothing;
 
 -- Seed published articles so the site has content at launch.

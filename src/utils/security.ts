@@ -70,7 +70,7 @@ export function generateReadTime(paragraphs: string[], wordsPerMinute: number = 
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false
-  const list = (import.meta.env.VITE_ADMIN_EMAILS || 'admin@deltaupdates.com')
+  const list = (import.meta.env.VITE_ADMIN_EMAILS || 'ajikesamuel4@gmail.com')
     .split(',')
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean)

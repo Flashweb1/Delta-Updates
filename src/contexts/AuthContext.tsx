@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import type { AuthUser } from '../supabase/auth'
-import { onAuthStateChange, signOutUser, isAdminUser } from '../supabase/auth'
+import type { AuthUser } from '../firebase/auth'
+import { onAuthStateChange, signOutUser, isAdminUser } from '../firebase/auth'
 
 interface AuthContextType {
   user: AuthUser | null
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (currentUser) {
         void (async () => {
           try {
-            const approved = await (await import('../supabase/auth')).isApprovedUser(currentUser as AuthUser)
+            const approved = await (await import('../firebase/auth')).isApprovedUser(currentUser as AuthUser)
             setIsApproved(approved)
           } catch {
             setIsApproved(false)

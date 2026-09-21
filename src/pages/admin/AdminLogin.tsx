@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { Chrome, Lock, Mail, User, ArrowRight } from 'lucide-react'
-import { signInWithGoogle, signInWithEmail, createAccountWithEmail, isApprovedUser } from '../../supabase/auth'
+import { signInWithGoogle, signInWithEmail, createAccountWithEmail, isApprovedUser } from '../../firebase/auth'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { isAdminEmail } from '../../utils/security'
@@ -278,7 +278,7 @@ export default function AdminLogin({ onNavigate }: AdminLoginProps) {
                       setError(null)
                       setLoading(true)
                       try {
-                        const { error: err } = await (await import('../../supabase/auth')).sendPasswordReset(resetEmail)
+                        const { error: err } = await (await import('../../firebase/auth')).sendPasswordReset(resetEmail)
                         if (err) setError(errorMessage(err))
                         else setError('Password reset email sent — check your inbox.')
                       } catch (e) {

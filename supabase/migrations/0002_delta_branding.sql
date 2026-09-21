@@ -13,7 +13,7 @@ set site_name        = 'Delta Update',
     twitter          = 'https://twitter.com/deltaupdates',
     instagram        = 'https://instagram.com/deltaupdates',
     canonical_domain = 'https://deltaupdates.vercel.app',
-    admin_emails     = array['admin@deltaupdates.com']::text[],
+    admin_emails     = array['ajikesamuel4@gmail.com']::text[],
     updated_at       = now()
 where id = 1;
 
@@ -32,5 +32,5 @@ as $$
   or lower(coalesce(auth.jwt() ->> 'email', '')) = any(
        coalesce((select s.admin_emails from public.site_config s where s.id = 1), '{}'::text[])
      )
-  or lower(coalesce(auth.jwt() ->> 'email', '')) = 'admin@deltaupdates.com';
+  or lower(coalesce(auth.jwt() ->> 'email', '')) = 'ajikesamuel4@gmail.com';
 $$;

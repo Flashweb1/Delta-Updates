@@ -1,5 +1,5 @@
 import { LayoutDashboard, FileText, Image, MessageSquare, BarChart3, Users, Settings, PlusCircle, Eye, LogOut, FolderTree, LayoutTemplate } from 'lucide-react'
-import { signOutUser } from '../../supabase/auth'
+import { signOutUser } from '../../firebase/auth'
 import { useAuth } from '../../contexts/AuthContext'
 import { logger } from '../../utils/logger'
 

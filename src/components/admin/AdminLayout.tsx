@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import AdminSidebar from './AdminSidebar'
 import AdminHeader from './AdminHeader'
-import { signOutUser } from '../../supabase/auth'
+import { signOutUser } from '../../firebase/auth'
 import { logger } from '../../utils/logger'
 
 interface AdminLayoutProps {
