@@ -5,8 +5,16 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 let _client: SupabaseClient | null | undefined
 
+const PLACEHOLDER_RE = /your[-_ ]project[-_ ]ref|YOUR[-_ ][A-Z]+/i
+
 function createSupabaseClient(): SupabaseClient | null {
   if (!supabaseUrl || !supabaseAnonKey) return null
+  if (PLACEHOLDER_RE.test(supabaseUrl) || PLACEHOLDER_RE.test(supabaseAnonKey)) {
+    console.error(
+      'Supabase is configured with placeholder values ("your-project-ref"/"YOUR_KEY"). Set the real values from the Supabase dashboard API settings and rebuild.',
+    )
+    return null
+  }
   return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,

@@ -13,7 +13,9 @@ import { getSupabase } from '../supabase/client'
 
 const AI_PROXY_URL = import.meta.env.VITE_SUPABASE_AI_PROXY_URL || ''
 
-export const isAIEnabled = () => Boolean(AI_PROXY_URL)
+const PLACEHOLDER_RE = /your[-_ ]project[-_ ]ref|YOUR[-_ ][A-Z]+/i
+
+export const isAIEnabled = () => Boolean(AI_PROXY_URL) && !PLACEHOLDER_RE.test(AI_PROXY_URL)
 
 interface AiProxyResponse<T> {
   ok: boolean

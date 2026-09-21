@@ -12,6 +12,16 @@ export interface AuthUser {
 
 type AuthResult<T = unknown> = { user: T | null; error: unknown }
 
+function getAuthRedirectBase(): string {
+  const configured = (import.meta.env.VITE_SITE_URL || '').replace(/\/$/, '')
+  return configured || window.location.origin
+}
+
+function getAuthRedirectUrl(): string {
+  const base = getAuthRedirectBase()
+  return new URL(window.location.pathname + window.location.search + window.location.hash, base).toString()
+}
+
 function toAuthUser(u: { id: string; email?: string | null; user_metadata?: Record<string, unknown> | null } | null | undefined): AuthUser | null {
   if (!u) return null
   const meta = (u.user_metadata ?? {}) as Record<string, unknown>
@@ -59,10 +69,10 @@ export const signInWithGoogle = async (): Promise<AuthResult<AuthUser>> => {
   const client = getSupabase()
   if (!client) return { user: null, error: new Error('Supabase is not configured.') }
   try {
-    const redirectTo = new URL(window.location.href)
+    const redirectTo = getAuthRedirectUrl()
     const { data, error } = await client.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: redirectTo.toString() },
+      options: { redirectTo },
     })
     if (error) return { user: null, error }
     // signInWithOAuth triggers a full redirect; the session is restored on return.
@@ -104,7 +114,7 @@ export const createAccountWithEmail = async (
       password,
       options: {
         data: { display_name: displayName ?? null },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: getAuthRedirectBase(),
       },
     })
     if (error) return { user: null, error }
@@ -122,7 +132,7 @@ export const sendPasswordReset = async (email: string): Promise<{ error: unknown
   if (!client) return { error: new Error('Supabase is not configured.') }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: new Error('Invalid email') }
   try {
-    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin })
+    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: getAuthRedirectBase() })
     return { error }
   } catch (error: unknown) {
     return { error }
