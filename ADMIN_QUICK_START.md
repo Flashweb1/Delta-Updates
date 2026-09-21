@@ -9,11 +9,11 @@ http://localhost:3000/admin
 
 ### Default Login
 ```
-Email: dev@bjlinks.test (dev mode - no auth required)
+Email: dev@deltaupdates.test (dev mode - no auth required)
 Password: (any value)
 ```
 
-**Note**: Dev mode bypass is enabled in `src/contexts/AuthContext.tsx` for testing. Remove `DEV_BYPASS_AUTH` before production.
+**Note**: Dev mode bypass is gated to dev builds in `src/contexts/AuthContext.tsx` — it can never take effect in production.
 
 ---
 

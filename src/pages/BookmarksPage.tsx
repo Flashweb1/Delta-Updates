@@ -1,5 +1,5 @@
 import { useBookmarks } from '../contexts/BookmarkContext'
-import { getArticlesByIds } from '../firebase/articles'
+import { getArticlesByIds } from '../supabase/articles'
 import ArticleCard from '../components/article/ArticleCard'
 import { SkeletonCard, SkeletonLine } from '../components/common/SkeletonLoader'
 import { useState, useEffect } from 'react'

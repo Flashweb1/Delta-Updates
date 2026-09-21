@@ -244,12 +244,14 @@ export default function ArticleDetail({
             alt={article.title}
             className="article-hero-img"
             itemProp="image"
+            width={1200}
+            height={675}
           />
         </div>
         <figcaption className="article-hero-caption">
           <Camera size={13} aria-hidden="true" />
           <span>
-            Featured documentation: {article.title}. Photo via Bjlinks News Editorial Archive.
+            Featured documentation: {article.title}. Photo via Delta Update Editorial Archive.
           </span>
         </figcaption>
       </figure>
@@ -367,7 +369,7 @@ export default function ArticleDetail({
                 }}
               >
                 <div className="related-card-image">
-                  <img src={related.image} alt={related.title} loading="lazy" />
+                  <img src={related.image} alt={related.title} loading="lazy" width={400} height={225} />
                   <span className="related-card-badge">{related.category}</span>
                 </div>
                 <div className="related-card-body">

@@ -1,53 +1,43 @@
 import { useState, useEffect } from 'react'
 import { Check, XCircle } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
-import { collection, query, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
-import { db, functions } from '../../firebase/init'
-import { httpsCallable } from 'firebase/functions'
+import { subscribeToPendingUsers, approveUser, rejectUser, type PendingUserRow } from '../../supabase/users'
+import { logger } from '../../utils/logger'
 
 interface UsersPageProps {
   onNavigate: (path: string) => void
 }
 
-interface PendingUser {
-  uid: string
-  email?: string | null
-  displayName?: string | null
-  createdAt?: any
-}
-
 export default function UsersPage({ onNavigate }: UsersPageProps) {
-  const [pending, setPending] = useState<PendingUser[]>([])
+  const [pending, setPending] = useState<PendingUserRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const q = query(collection(db, 'pendingUsers'))
-    const unsub = onSnapshot(q, (snap) => {
-      const arr: PendingUser[] = []
-      snap.forEach((d) => arr.push({ uid: d.id, ...(d.data() as any) }))
+    const unsub = subscribeToPendingUsers((arr) => {
       setPending(arr)
       setLoading(false)
     })
     return () => unsub()
   }, [])
 
-  const approveUser = async (uid: string, role: string = 'editor') => {
+  const approve = async (uid: string, role: string = 'editor') => {
     try {
-      const fn = httpsCallable(functions, 'setApproved')
-      const res = await fn({ uid, role })
-      // success
+      await approveUser(uid, role)
     } catch (e) {
-      console.error('approve error', e)
-      alert('Failed to approve user: ' + String(e))
+      logger.error('approve error', e)
+      setError('Failed to approve user. Please try again.')
+      setTimeout(() => setError(null), 3000)
     }
   }
 
-  const rejectUser = async (uid: string) => {
+  const reject = async (uid: string) => {
     try {
-      await deleteDoc(doc(db, 'pendingUsers', uid))
+      await rejectUser(uid)
     } catch (e) {
-      console.error('reject error', e)
-      alert('Failed to reject user: ' + String(e))
+      logger.error('reject error', e)
+      setError('Failed to reject user. Please try again.')
+      setTimeout(() => setError(null), 3000)
     }
   }
 
@@ -60,8 +50,19 @@ export default function UsersPage({ onNavigate }: UsersPageProps) {
         </div>
       </div>
 
+      {error && (
+        <div style={{ padding: '0.75rem 1rem', marginBottom: '1rem', borderRadius: '8px', background: 'var(--admin-error-soft)', color: 'var(--admin-error)', fontSize: '0.875rem', fontWeight: 500 }}>
+          {error}
+        </div>
+      )}
+
       <div className="admin-card">
         <div className="admin-table-container">
+          {loading ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--admin-text-muted)' }}>
+              Loading users...
+            </div>
+          ) : (
           <table className="admin-table">
             <thead>
               <tr>
@@ -82,10 +83,10 @@ export default function UsersPage({ onNavigate }: UsersPageProps) {
                       </div>
                     </div>
                   </td>
-                  <td className="admin-text-sm admin-text-muted">{u.createdAt?.toDate ? u.createdAt.toDate().toLocaleString() : ''}</td>
+                  <td className="admin-text-sm admin-text-muted">{u.createdAt}</td>
                   <td>
-                    <button className="btn-admin-primary" onClick={() => approveUser(u.uid)} title="Approve"><Check size={14} /> Approve</button>
-                    <button className="btn-admin-danger" style={{ marginLeft: 8 }} onClick={() => rejectUser(u.uid)} title="Reject"><XCircle size={14} /> Reject</button>
+                    <button className="btn-admin-primary" onClick={() => approve(u.uid)} title="Approve"><Check size={14} /> Approve</button>
+                    <button className="btn-admin-danger" style={{ marginLeft: 8 }} onClick={() => reject(u.uid)} title="Reject"><XCircle size={14} /> Reject</button>
                   </td>
                 </tr>
               ))}
@@ -94,6 +95,7 @@ export default function UsersPage({ onNavigate }: UsersPageProps) {
               )}
             </tbody>
           </table>
+          )}
         </div>
       </div>
     </AdminLayout>

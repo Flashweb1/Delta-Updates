@@ -1,96 +1,34 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Check, X, Trash2, Flag, MessageSquare, Sparkles, Loader2 } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { moderateComment, isAIEnabled, type ModerationResult } from '../../utils/ai'
+import { subscribeToComments, updateCommentStatus, updateCommentAiVerdict, deleteComment, type AdminCommentRow } from '../../supabase/comments'
+import { logger } from '../../utils/logger'
 
 interface CommentsPageProps {
   onNavigate: (path: string) => void
 }
 
-interface Comment {
-  id: string
-  articleId: string
-  articleTitle: string
-  author: string
-  authorEmail: string
-  body: string
-  createdAt: string
-  status: 'pending' | 'approved' | 'rejected'
-  aiVerdict?: ModerationResult
-}
-
-const sampleComments: Comment[] = [
-  {
-    id: '1',
-    articleId: '1',
-    articleTitle: 'Governor Oborevwori Commissions Landmark Secretariat Complex',
-    author: 'Emeka Nwosu',
-    authorEmail: 'emeka.nwosu@email.com',
-    body: 'This is fantastic news for Delta State. The modern infrastructure will surely boost administrative efficiency.',
-    createdAt: '2 hours ago',
-    status: 'pending',
-  },
-  {
-    id: '2',
-    articleId: '3',
-    articleTitle: 'Warri Tech Hub Launches Pioneer AI & Renewable Energy Innovation Center',
-    author: 'Chidinma Adebayo',
-    authorEmail: 'chidinma.a@techhub.ng',
-    body: 'Finally, Warri is getting the recognition it deserves in the tech space. Looking forward to the programs!',
-    createdAt: '4 hours ago',
-    status: 'pending',
-  },
-  {
-    id: '3',
-    articleId: '2',
-    articleTitle: 'Nigerian Economy Shows Resilient Growth',
-    author: 'Obinna Okeke',
-    authorEmail: 'obinna.okeke@business.ng',
-    body: 'The fintech sector growth is particularly impressive. We need more policies that support this trajectory.',
-    createdAt: '6 hours ago',
-    status: 'approved',
-  },
-  {
-    id: '4',
-    articleId: '5',
-    articleTitle: 'Super Eagles Qualify for 2027 AFCON',
-    author: 'Adebayo Samuel',
-    authorEmail: 'samueladebayo@sports.com',
-    body: 'What a thrilling qualifier! The team showed great character. AFCON 2027 will be exciting.',
-    createdAt: '1 day ago',
-    status: 'approved',
-  },
-  {
-    id: '5',
-    articleId: '4',
-    articleTitle: 'Nigerian Universities Partner with International Tech Firms',
-    author: 'Ngozi Federal',
-    authorEmail: 'ngozi.f@university.edu',
-    body: 'This partnership will open doors for many students. AI research is the future.',
-    createdAt: '1 day ago',
-    status: 'pending',
-  },
-  {
-    id: '6',
-    articleId: '8',
-    articleTitle: 'Nigeria Joins Global Initiative for Digital Health Transformation',
-    author: 'Dr. Okonkwo',
-    authorEmail: 'okonkwo@hospital.ng',
-    body: 'Telemedicine expansion is crucial for reaching rural communities. This is a step in the right direction.',
-    createdAt: '2 days ago',
-    status: 'rejected',
-  },
-]
+type Comment = AdminCommentRow
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected'
 
 export default function CommentsPage({ onNavigate }: CommentsPageProps) {
-  const [comments, setComments] = useState<Comment[]>(sampleComments)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [aiLoadingIds, setAiLoadingIds] = useState<Set<string>>(new Set())
   const [bulkAiLoading, setBulkAiLoading] = useState(false)
   const aiEnabled = isAIEnabled()
+
+  useEffect(() => {
+    const unsub = subscribeToComments((list) => {
+      setComments(list)
+      setLoading(false)
+    })
+    return () => unsub()
+  }, [])
 
   const filteredComments = statusFilter === 'all'
     ? comments
@@ -113,39 +51,52 @@ export default function CommentsPage({ onNavigate }: CommentsPageProps) {
     }
   }
 
-  const approve = (id: string) => {
-    setComments((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, status: 'approved' as const } : c))
-    )
+  const approve = async (id: string) => {
+    try {
+      await updateCommentStatus(id, 'approved')
+    } catch (err) {
+      logger.error('[CommentsPage] Approve failed', err)
+    }
   }
 
-  const reject = (id: string) => {
-    setComments((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, status: 'rejected' as const } : c))
-    )
+  const reject = async (id: string) => {
+    try {
+      await updateCommentStatus(id, 'rejected')
+    } catch (err) {
+      logger.error('[CommentsPage] Reject failed', err)
+    }
   }
 
-  const remove = (id: string) => {
-    setComments((prev) => prev.filter((c) => c.id !== id))
-    setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next })
+  const remove = async (id: string) => {
+    try {
+      await deleteComment(id)
+      setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next })
+    } catch (err) {
+      logger.error('[CommentsPage] Delete failed', err)
+    }
   }
 
-  const bulkApprove = () => {
-    setComments((prev) =>
-      prev.map((c) => selectedIds.has(c.id) ? { ...c, status: 'approved' as const } : c)
+  const bulkApprove = async () => {
+    const promises = Array.from(selectedIds).map((id) =>
+      updateCommentStatus(id, 'approved')
     )
+    await Promise.allSettled(promises)
     setSelectedIds(new Set())
   }
 
-  const bulkReject = () => {
-    setComments((prev) =>
-      prev.map((c) => selectedIds.has(c.id) ? { ...c, status: 'rejected' as const } : c)
+  const bulkReject = async () => {
+    const promises = Array.from(selectedIds).map((id) =>
+      updateCommentStatus(id, 'rejected')
     )
+    await Promise.allSettled(promises)
     setSelectedIds(new Set())
   }
 
-  const bulkDelete = () => {
-    setComments((prev) => prev.filter((c) => !selectedIds.has(c.id)))
+  const bulkDelete = async () => {
+    const promises = Array.from(selectedIds).map((id) =>
+      deleteComment(id)
+    )
+    await Promise.allSettled(promises)
     setSelectedIds(new Set())
   }
 
@@ -155,12 +106,12 @@ export default function CommentsPage({ onNavigate }: CommentsPageProps) {
     setAiLoadingIds(prev => new Set(prev).add(id))
     try {
       const result = await moderateComment(comment.body, comment.articleTitle)
-      setComments(prev => prev.map(c => c.id === id ? { ...c, aiVerdict: result } : c))
-      // Auto-apply verdict
-      if (result.verdict === 'approve') approve(id)
-      else if (result.verdict === 'reject') reject(id)
+      await Promise.all([
+        updateCommentAiVerdict(id, result),
+        updateCommentStatus(id, result.verdict === 'approve' ? 'approved' : result.verdict === 'reject' ? 'rejected' : comment.status),
+      ])
     } catch {
-      // silently fail — manual moderation still available
+      // manual moderation still available
     } finally {
       setAiLoadingIds(prev => { const next = new Set(prev); next.delete(id); return next })
     }
@@ -173,13 +124,11 @@ export default function CommentsPage({ onNavigate }: CommentsPageProps) {
     for (const comment of pending) {
       try {
         const result = await moderateComment(comment.body, comment.articleTitle)
-        setComments(prev => prev.map(c => {
-          if (c.id !== comment.id) return c
-          const updated = { ...c, aiVerdict: result }
-          if (result.verdict === 'approve') return { ...updated, status: 'approved' as const }
-          if (result.verdict === 'reject') return { ...updated, status: 'rejected' as const }
-          return updated
-        }))
+        const newStatus = result.verdict === 'approve' ? 'approved' : result.verdict === 'reject' ? 'rejected' : comment.status
+        await Promise.all([
+          updateCommentAiVerdict(comment.id, result),
+          updateCommentStatus(comment.id, newStatus),
+        ])
       } catch { /* continue */ }
     }
     setBulkAiLoading(false)
@@ -293,6 +242,11 @@ export default function CommentsPage({ onNavigate }: CommentsPageProps) {
         </div>
 
         <div className="admin-table-container">
+          {loading ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--admin-text-muted)' }}>
+              Loading comments...
+            </div>
+          ) : (
           <table className="admin-table">
             <thead>
               <tr>
@@ -414,6 +368,7 @@ export default function CommentsPage({ onNavigate }: CommentsPageProps) {
               )}
             </tbody>
           </table>
+          )}
         </div>
       </div>
     </AdminLayout>

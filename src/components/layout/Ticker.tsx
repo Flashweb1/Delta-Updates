@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { breakingNews as staticBreaking } from '../../data/articles'
-import { subscribeToSiteConfig } from '../../firebase/siteConfig'
+import { subscribeToSiteConfig } from '../../supabase/siteConfig'
 
 export default function Ticker() {
   const [items, setItems] = useState<string[]>(staticBreaking)

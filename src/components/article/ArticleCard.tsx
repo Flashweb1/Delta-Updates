@@ -29,7 +29,7 @@ export default function ArticleCard({
       onClick={() => onNavigate(`/article/${article.slug}`)}
     >
       <div className="article-card-image">
-        <img src={article.image} alt={article.title} loading="lazy" />
+        <img src={article.image} alt={article.title} loading="lazy" width={400} height={225} />
         <span className="kicker">{article.category}</span>
       </div>
       <div className="article-card-body">

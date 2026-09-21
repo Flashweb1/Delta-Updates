@@ -1,5 +1,5 @@
 import { Search, Bell, Settings, ChevronDown, Menu } from 'lucide-react'
-import { auth } from '../../firebase/init'
+import { useAuth } from '../../contexts/AuthContext'
 
 interface AdminHeaderProps {
   breadcrumb?: { label: string; path?: string }[]
@@ -9,7 +9,7 @@ interface AdminHeaderProps {
 }
 
 export default function AdminHeader({ breadcrumb, onBreadcrumbClick, onNavigate, onMenuToggle }: AdminHeaderProps) {
-  const user = auth.currentUser
+  const { user } = useAuth()
   const userInitial = user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'A'
 
   const defaultBreadcrumb = breadcrumb || [

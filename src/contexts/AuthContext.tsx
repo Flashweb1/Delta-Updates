@@ -1,9 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { User } from 'firebase/auth'
-import { onAuthStateChange, signOutUser, isAdminUser } from '../firebase/auth'
+import type { AuthUser } from '../supabase/auth'
+import { onAuthStateChange, signOutUser, isAdminUser } from '../supabase/auth'
 
 interface AuthContextType {
-  user: User | null
+  user: AuthUser | null
   isAdmin: boolean
   isApproved: boolean
   loading: boolean
@@ -19,30 +19,36 @@ const AuthContext = createContext<AuthContextType>({
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isApproved, setIsApproved] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const DEV_BYPASS_AUTH =
-    import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true'
+    import.meta.env.DEV === true && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true'
 
   useEffect(() => {
     if (DEV_BYPASS_AUTH) {
-      setUser({ email: 'dev@bjlinks.test', uid: 'dev-user-123' } as User)
+      // Use first allowlisted admin email for dev bypass so previewing admin flows works
+      const list = (import.meta.env.VITE_ADMIN_EMAILS || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+      const devEmail = list[0] || 'dev@deltaupdates.test'
+      setUser({ email: devEmail, uid: 'dev-user-123', displayName: 'Dev Admin', emailVerified: true } as AuthUser)
       setIsAdmin(true)
       setLoading(false)
       return
     }
 
     const unsubscribe = onAuthStateChange((currentUser) => {
-      setUser(currentUser as User | null)
+      setUser(currentUser as AuthUser | null)
       setIsAdmin(isAdminUser(currentUser))
       // asynchronous check for approval
       if (currentUser) {
         void (async () => {
           try {
-            const approved = await (await import('../firebase/auth')).isApprovedUser(currentUser as User)
+            const approved = await (await import('../supabase/auth')).isApprovedUser(currentUser as AuthUser)
             setIsApproved(approved)
           } catch {
             setIsApproved(false)

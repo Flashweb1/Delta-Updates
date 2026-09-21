@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Check, Plus, Trash2, GripVertical, AlertTriangle, Search, Star, Eye, EyeOff, RefreshCw, X, ChevronUp, ChevronDown } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
-import { getSiteConfig, saveSiteConfig, DEFAULT_CONFIG, type SiteConfig, type BreakingNewsItem, type HomepageSection } from '../../firebase/siteConfig'
-import { getCategories, type Category } from '../../firebase/categories'
-import { getLatestArticles } from '../../firebase/articles'
+import { getSiteConfig, saveSiteConfig, DEFAULT_CONFIG, type SiteConfig, type BreakingNewsItem, type HomepageSection } from '../../supabase/siteConfig'
+import { getCategories, type Category } from '../../supabase/categories'
+import { getLatestArticles } from '../../supabase/articles'
 import type { Article } from '../../data/articles'
 
 

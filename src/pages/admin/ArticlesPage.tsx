@@ -9,8 +9,9 @@ import {
   Plus,
 } from 'lucide-react'
 import type { Article } from '../../data/articles'
-import { getAllArticlesAdmin, deleteArticle, updateArticle } from '../../firebase/articles'
+import { getAllArticlesAdmin, deleteArticle, updateArticle } from '../../supabase/articles'
 import AdminLayout from '../../components/admin/AdminLayout'
+import { logger } from '../../utils/logger'
 
 interface ArticlesPageProps {
   onNavigate: (path: string) => void
@@ -40,7 +41,7 @@ export default function ArticlesPage({ onNavigate }: ArticlesPageProps) {
         const data = await getAllArticlesAdmin()
         setArticles(data)
       } catch (err) {
-        console.error('Error loading articles:', err)
+        logger.error('Error loading articles', err)
       } finally {
         setLoading(false)
       }
@@ -142,34 +143,29 @@ export default function ArticlesPage({ onNavigate }: ArticlesPageProps) {
       setArticles((prev) => prev.filter((a) => a.id !== id))
       setShowDeleteConfirm(null)
     } catch (err) {
-      console.error('Error deleting article:', err)
+      logger.error('Error deleting article', err)
     }
   }
 
   const handleBulkDelete = async () => {
-    for (const id of selectedIds) {
-      try {
-        await deleteArticle(id)
-      } catch (err) {
-        console.error('Error deleting article:', err)
-      }
-    }
+    const results = await Promise.allSettled(
+      Array.from(selectedIds).map((id) => deleteArticle(id))
+    )
+    results.forEach((r, i) => {
+      if (r.status === 'rejected') logger.error('Bulk delete failed', r.reason)
+    })
     setArticles((prev) => prev.filter((a) => !selectedIds.has(a.id)))
     setSelectedIds(new Set())
     setBulkAction('')
   }
 
   const handleBulkStatusChange = async (status: Article['status']) => {
-    for (const id of selectedIds) {
+    const updates = Array.from(selectedIds).map((id) => {
       const article = articles.find((a) => a.id === id)
-      if (article) {
-        try {
-          await updateArticle(id, { ...article, status })
-        } catch (err) {
-          console.error('Error updating article:', err)
-        }
-      }
-    }
+      if (!article) return Promise.resolve()
+      return updateArticle(id, { ...article, status })
+    })
+    await Promise.allSettled(updates)
     setArticles((prev) =>
       prev.map((a) => (selectedIds.has(a.id) ? { ...a, status } : a))
     )

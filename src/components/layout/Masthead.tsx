@@ -84,10 +84,10 @@ export default function Masthead({ onNavigate }: MastheadProps) {
             className="logo"
             onClick={() => onNavigate('/')}
             style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-            aria-label="Bjlinks News - Home"
+            aria-label="Delta Update - Home"
           >
             <span className="logo-text">
-              Bjlinks<span className="accent"> News</span>
+              Delta<span className="accent"> Update</span>
             </span>
             <span className="logo-slogan">Information for living</span>
           </button>
@@ -147,7 +147,7 @@ export default function Masthead({ onNavigate }: MastheadProps) {
           >
             <div className="mobile-nav-header">
               <span className="logo-small">
-                Bjlinks<span className="accent">.</span>
+                Delta<span className="accent">.</span>
               </span>
               <button
                 className="icon-btn"

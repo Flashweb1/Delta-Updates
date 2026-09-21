@@ -70,7 +70,7 @@ export function generateReadTime(paragraphs: string[], wordsPerMinute: number = 
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false
-  const list = (import.meta.env.VITE_ADMIN_EMAILS || 'admin@bjlinksnews.com')
+  const list = (import.meta.env.VITE_ADMIN_EMAILS || 'admin@deltaupdates.com')
     .split(',')
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean)
@@ -78,20 +78,20 @@ export function isAdminEmail(email: string | null | undefined): boolean {
 }
 
 export function buildCanonicalUrl(path: string = '/'): string {
-  const base = (import.meta.env.VITE_SITE_URL || 'https://bjlinks-news.vercel.app').replace(/\/$/, '')
+  const base = (import.meta.env.VITE_SITE_URL || 'https://deltaupdates.vercel.app').replace(/\/$/, '')
   const p = path.startsWith('/') ? path : `/${path}`
   return `${base}${p}`
 }
 
 export function getSiteConfig() {
   return {
-    name: import.meta.env.VITE_SITE_NAME || 'Bjlinks News',
+    name: import.meta.env.VITE_SITE_NAME || 'Delta Update',
     description:
       import.meta.env.VITE_SITE_DESCRIPTION ||
-      'Bjlinks News delivers premium journalism covering politics, business, technology, and more from Nigeria and around the world.',
+      'Delta Update delivers premium journalism covering politics, business, technology, and more from Nigeria and around the world.',
     locale: import.meta.env.VITE_SITE_LOCALE || 'en_NG',
-    url: import.meta.env.VITE_SITE_URL || 'https://bjlinks-news.vercel.app',
-    contactEmail: import.meta.env.VITE_CONTACT_EMAIL || 'hello@bjlinksnews.com',
+    url: import.meta.env.VITE_SITE_URL || 'https://deltaupdates.vercel.app',
+    contactEmail: import.meta.env.VITE_CONTACT_EMAIL || 'editor@deltaupdates.com',
     showCookieBanner: import.meta.env.VITE_SHOW_COOKIE_BANNER !== 'false',
   }
 }

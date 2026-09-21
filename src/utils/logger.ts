@@ -28,15 +28,15 @@ export const logger = {
   debug: (message: string, context?: LogContext) => {
     if (!isDev) return
     // eslint-disable-next-line no-console
-    console.debug(`[bjlinks][debug] ${message}`, ...(context ? [serialize(context)] : []))
+    console.debug(`[delta][debug] ${message}`, ...(context ? [serialize(context)] : []))
   },
   info: (message: string, context?: LogContext) => {
     // eslint-disable-next-line no-console
-    console.info(`[bjlinks][info] ${message}`, ...(context ? [serialize(context)] : []))
+    console.info(`[delta][info] ${message}`, ...(context ? [serialize(context)] : []))
   },
   warn: (message: string, context?: LogContext) => {
     // eslint-disable-next-line no-console
-    console.warn(`[bjlinks][warn] ${message}`, ...(context ? [serialize(context)] : []))
+    console.warn(`[delta][warn] ${message}`, ...(context ? [serialize(context)] : []))
   },
   error: (message: string, err?: unknown, context?: LogContext) => {
     const safeErr =
@@ -44,7 +44,7 @@ export const logger = {
         ? { name: err.name, message: err.message, stack: err.stack }
         : err
     // eslint-disable-next-line no-console
-    console.error(`[bjlinks][error] ${message}`, ...scrub([safeErr, serialize(context)]))
+    console.error(`[delta][error] ${message}`, ...scrub([safeErr, serialize(context)]))
 
     if (typeof window !== 'undefined' && isProd) {
       try {
@@ -53,7 +53,7 @@ export const logger = {
           error: unknown
           context: LogContext
           ts: number
-        }>('bjlinks:error', {
+        }>('delta:error', {
           detail: { message, error: safeErr, context, ts: Date.now() },
         })
         window.dispatchEvent(evt)

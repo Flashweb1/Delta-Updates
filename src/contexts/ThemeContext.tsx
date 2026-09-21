@@ -9,7 +9,7 @@ const ThemeContext = createContext<ThemeContextType>({ isDark: false, toggle: ()
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('bjlinks-theme')
+    const saved = localStorage.getItem('delta-theme')
     if (saved) return saved === 'dark'
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
@@ -18,7 +18,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.classList.toggle('dark', isDark)
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
     document.body.setAttribute('data-theme', isDark ? 'dark' : 'light')
-    localStorage.setItem('bjlinks-theme', isDark ? 'dark' : 'light')
+    localStorage.setItem('delta-theme', isDark ? 'dark' : 'light')
   }, [isDark])
 
   return (

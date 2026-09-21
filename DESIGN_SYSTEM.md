@@ -1,4 +1,4 @@
-# Bjlinks News — Professional Design System Documentation
+# Delta Update — Professional Design System Documentation
 
 ## Overview
 
@@ -591,4 +591,4 @@ src/
 
 ## License
 
-© Bjlinks News. All rights reserved.
+© Delta Update. All rights reserved.

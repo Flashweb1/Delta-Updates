@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { BarChart3, TrendingUp, Eye, Clock, FileText, Users, AlertTriangle } from 'lucide-react'
 import type { Article } from '../../data/articles'
-import { getAllArticlesAdmin } from '../../firebase/articles'
+import { getAllArticlesAdmin } from '../../supabase/articles'
 import AdminLayout from '../../components/admin/AdminLayout'
 import StatsCard from '../../components/admin/StatsCard'
 

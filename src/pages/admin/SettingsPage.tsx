@@ -4,7 +4,7 @@ import {
   RefreshCw, Twitter, Instagram, Youtube
 } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
-import { getSiteConfig, saveSiteConfig, DEFAULT_CONFIG, type SiteConfig } from '../../firebase/siteConfig'
+import { getSiteConfig, saveSiteConfig, DEFAULT_CONFIG, type SiteConfig } from '../../supabase/siteConfig'
 import { isValidEmail } from '../../utils/security'
 
 interface SettingsPageProps {
@@ -310,25 +310,25 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps) {
                 <FormField label="Facebook">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Globe size={16} style={{ color: '#1877F2', flexShrink: 0 }} />
-                    <input className="admin-input" type="url" placeholder="https://facebook.com/bjlinksnews" value={config.facebook} onChange={(e) => update({ facebook: e.target.value })} />
+                    <input className="admin-input" type="url" placeholder="https://facebook.com/deltaupdates" value={config.facebook} onChange={(e) => update({ facebook: e.target.value })} />
                   </div>
                 </FormField>
                 <FormField label="Twitter / X">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Twitter size={16} style={{ color: '#1DA1F2', flexShrink: 0 }} />
-                    <input className="admin-input" type="url" placeholder="https://twitter.com/bjlinksnews" value={config.twitter} onChange={(e) => update({ twitter: e.target.value })} />
+                    <input className="admin-input" type="url" placeholder="https://twitter.com/deltaupdates" value={config.twitter} onChange={(e) => update({ twitter: e.target.value })} />
                   </div>
                 </FormField>
                 <FormField label="Instagram">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Instagram size={16} style={{ color: '#E1306C', flexShrink: 0 }} />
-                    <input className="admin-input" type="url" placeholder="https://instagram.com/bjlinksnews" value={config.instagram} onChange={(e) => update({ instagram: e.target.value })} />
+                    <input className="admin-input" type="url" placeholder="https://instagram.com/deltaupdates" value={config.instagram} onChange={(e) => update({ instagram: e.target.value })} />
                   </div>
                 </FormField>
                 <FormField label="YouTube">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Youtube size={16} style={{ color: '#FF0000', flexShrink: 0 }} />
-                    <input className="admin-input" type="url" placeholder="https://youtube.com/@bjlinksnews" value={config.youtube} onChange={(e) => update({ youtube: e.target.value })} />
+                    <input className="admin-input" type="url" placeholder="https://youtube.com/@deltaupdates" value={config.youtube} onChange={(e) => update({ youtube: e.target.value })} />
                   </div>
                 </FormField>
               </div>

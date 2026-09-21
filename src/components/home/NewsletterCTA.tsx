@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { Mail, CheckCircle } from 'lucide-react'
+import { subscribeEmail } from '../../supabase/newsletter'
 import './home.css'
 
 export default function NewsletterCTA() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -21,10 +23,17 @@ export default function NewsletterCTA() {
       return
     }
 
-    // TODO: Submit to Firebase
-    setSubmitted(true)
-    setEmail('')
-    setTimeout(() => setSubmitted(false), 5000)
+    setSubmitting(true)
+    try {
+      await subscribeEmail(email)
+      setSubmitted(true)
+      setEmail('')
+      setTimeout(() => setSubmitted(false), 5000)
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -45,14 +54,16 @@ export default function NewsletterCTA() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
               className="newsletter-cta-input"
-              disabled={submitted}
+              disabled={submitted || submitting}
             />
-            <button type="submit" className="newsletter-cta-btn" disabled={submitted}>
+            <button type="submit" className="newsletter-cta-btn" disabled={submitted || submitting}>
               {submitted ? (
                 <>
                   <CheckCircle size={18} />
                   <span>Subscribed!</span>
                 </>
+              ) : submitting ? (
+                'Subscribing...'
               ) : (
                 'Subscribe'
               )}

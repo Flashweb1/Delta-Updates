@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { Chrome, Lock, Mail, User, ArrowRight } from 'lucide-react'
-import { signInWithGoogle, signInWithEmail, createAccountWithEmail, isApprovedUser } from '../../firebase/auth'
+import { signInWithGoogle, signInWithEmail, createAccountWithEmail, isApprovedUser } from '../../supabase/auth'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { isAdminEmail } from '../../utils/security'
@@ -18,18 +18,25 @@ function errorMessage(err: unknown): string {
   const e = err as { message?: string; code?: string } | undefined
   if (e?.code) {
     switch (e.code) {
+      case 'invalid_credentials':
       case 'auth/user-not-found':
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
         return 'Invalid email or password.'
+      case 'user_already_exists':
+      case 'email_exists':
       case 'auth/email-already-in-use':
         return 'An account with that email already exists.'
+      case 'weak_password':
       case 'auth/weak-password':
         return 'Password should be at least 8 characters.'
-      case 'auth/popup-closed-by-user':
-        return 'The sign-in popup was closed.'
+      case 'invalid_email':
       case 'auth/invalid-email':
         return 'Please enter a valid email address.'
+      case 'over_email_send_rate_limit':
+        return 'Too many attempts. Please try again later.'
+      case 'auth/popup-closed-by-user':
+        return 'The sign-in popup was closed.'
       default:
         break
     }
@@ -74,8 +81,15 @@ export default function AdminLogin({ onNavigate }: AdminLoginProps) {
       }
       const goto = onNavigate ?? navigate
       if (res.user) {
+        const emailAddr = res.user.email
+        const isTrustedAdmin = !!(emailAddr && isAdminEmail(emailAddr))
+        if (isTrustedAdmin) {
+          goto('/admin')
+          return
+        }
+
         const approved = await isApprovedUser(res.user)
-        if (approved && res.user.email && isAdminEmail(res.user.email)) {
+        if (approved && emailAddr && isAdminEmail(emailAddr)) {
           goto('/admin')
         } else if (approved) {
           goto('/')
@@ -99,8 +113,19 @@ export default function AdminLogin({ onNavigate }: AdminLoginProps) {
         setError(errorMessage(res.error))
         return
       }
+      // Supabase OAuth performs a full redirect; the post-redirect session is
+      // restored by onAuthStateChange, after which the effect above navigates.
+      if (!res.user) {
+        return
+      }
       const goto = onNavigate ?? navigate
-      const emailAddr = res.user?.email
+      const emailAddr = res.user.email
+      const isTrustedAdmin = !!(emailAddr && isAdminEmail(emailAddr))
+      if (isTrustedAdmin) {
+        goto('/admin')
+        return
+      }
+
       const approved = res.user ? await isApprovedUser(res.user) : false
       if (approved && emailAddr && isAdminEmail(emailAddr)) {
         goto('/admin')
@@ -128,7 +153,7 @@ export default function AdminLogin({ onNavigate }: AdminLoginProps) {
             </h1>
             <p className="welcome-subtitle">
               {mode === 'signin'
-                ? 'Access the Bjlinks editorial hub and manage your stories.'
+                ? 'Access the Delta Update editorial hub and manage your stories.'
                 : 'Create your editor account and start publishing.'}
             </p>
             <div className="welcome-features">
@@ -208,7 +233,7 @@ export default function AdminLogin({ onNavigate }: AdminLoginProps) {
                     id="email"
                     type="email"
                     autoComplete="email"
-                    placeholder="editor@bjlinksnews.com"
+                    placeholder="editor@deltaupdates.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -253,7 +278,7 @@ export default function AdminLogin({ onNavigate }: AdminLoginProps) {
                       setError(null)
                       setLoading(true)
                       try {
-                        const { error: err } = await (await import('../../firebase/auth')).sendPasswordReset(resetEmail)
+                        const { error: err } = await (await import('../../supabase/auth')).sendPasswordReset(resetEmail)
                         if (err) setError(errorMessage(err))
                         else setError('Password reset email sent — check your inbox.')
                       } catch (e) {
@@ -321,7 +346,7 @@ export default function AdminLogin({ onNavigate }: AdminLoginProps) {
               className="btn-back"
               onClick={() => (onNavigate ?? navigate)('/')}
             >
-              ← Back to Bjlinks
+              ← Back to Delta Update
             </button>
           </div>
         </div>

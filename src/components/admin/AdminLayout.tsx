@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import AdminSidebar from './AdminSidebar'
 import AdminHeader from './AdminHeader'
-import { signOut } from 'firebase/auth'
-import { auth } from '../../firebase/init'
+import { signOutUser } from '../../supabase/auth'
+import { logger } from '../../utils/logger'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -58,9 +58,9 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     try {
-      await signOut(auth)
+      await signOutUser()
     } catch (error) {
-      console.error('Logout error:', error)
+      logger.error('Logout error', error)
     }
   }
 

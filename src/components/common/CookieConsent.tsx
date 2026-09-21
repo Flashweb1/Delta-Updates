@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Cookie, X } from 'lucide-react'
 import { getSiteConfig } from '../../utils/security'
+import { getConsentState, notifyConsentGranted } from '../../utils/consent'
 
-const STORAGE_KEY = 'bjlinks-cookie-consent'
+const STORAGE_KEY = 'delta-cookie-consent'
 type ConsentState = 'granted' | 'denied' | 'unknown'
 
 export function CookieConsent() {
@@ -12,15 +13,12 @@ export function CookieConsent() {
 
   useEffect(() => {
     if (!cfg.showCookieBanner) return
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY) as ConsentState | null
-      if (raw === 'granted' || raw === 'denied') {
-        setConsent(raw)
-      } else {
-        const t = setTimeout(() => setVisible(true), 800)
-        return () => clearTimeout(t)
-      }
-    } catch {
+    const stored = getConsentState()
+    if (stored !== 'unknown') {
+      setConsent(stored)
+    } else {
+      const t = setTimeout(() => setVisible(true), 800)
+      return () => clearTimeout(t)
     }
   }, [cfg.showCookieBanner])
 
@@ -31,9 +29,9 @@ export function CookieConsent() {
   const write = (value: ConsentState) => {
     try {
       localStorage.setItem(STORAGE_KEY, value)
-    } catch {
-    }
+    } catch {}
     setConsent(value)
+    if (value === 'granted') notifyConsentGranted()
   }
 
   return (

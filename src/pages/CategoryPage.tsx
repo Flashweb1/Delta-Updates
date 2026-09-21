@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { categories } from '../data/articles'
-import { getArticlesByCategory } from '../firebase/articles'
+import { getArticlesByCategory } from '../supabase/articles'
 import ArticleCard from '../components/article/ArticleCard'
 import CategoryIndex from '../components/article/CategoryIndex'
 import SectionHeader from '../components/ui/SectionHeader'

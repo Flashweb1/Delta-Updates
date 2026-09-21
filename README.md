@@ -1,9 +1,9 @@
-# Bjlinks News
+# Delta Update
 
 > Premium news publication — politics, business, technology, and more from Nigeria and around the world.
-> Built with React 18, TypeScript, Vite, and Firebase.
+> Built with React 18, TypeScript, Vite, and Supabase.
 
-![Bjlinks News preview](./preview-desktop.png)
+![Delta Update preview](./preview-desktop.png)
 
 ## Highlights
 
@@ -176,4 +176,4 @@ npm run deploy:netlify
 
 ## License
 
-Proprietary. © Bjlinks News. All rights reserved.
+Proprietary. © Delta Update. All rights reserved.

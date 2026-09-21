@@ -9,8 +9,8 @@ import {
   reorderCategories,
   seedCategoriesIfEmpty,
   type Category,
-} from '../../firebase/categories'
-import { getAllArticlesAdmin } from '../../firebase/articles'
+} from '../../supabase/categories'
+import { getAllArticlesAdmin } from '../../supabase/articles'
 import { normalizeSlug } from '../../utils/security'
 
 interface CategoriesPageProps {

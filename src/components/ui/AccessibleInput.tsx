@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, ReactNode } from 'react'
+import { InputHTMLAttributes, ReactNode, useState } from 'react'
 import { generateId } from '../../utils/accessibility'
 
 interface AccessibleInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -135,12 +135,22 @@ export function AccessibleTextarea({
   disabled = false,
   maxLength,
   showCharCount = false,
+  value: controlledValue,
+  onChange,
   ...props
 }: AccessibleTextareaProps) {
   const textareaId = id || generateId('textarea')
   const errorId = generateId(`${textareaId}-error`)
   const helperId = generateId(`${textareaId}-helper`)
   const charCountId = generateId(`${textareaId}-charcount`)
+
+  const [internalValue, setInternalValue] = useState('')
+  const currentValue = controlledValue !== undefined ? String(controlledValue) : internalValue
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInternalValue(e.target.value)
+    onChange?.(e)
+  }
 
   const describedByIds = [
     error ? errorId : null,
@@ -167,13 +177,14 @@ export function AccessibleTextarea({
         aria-invalid={isInvalid}
         aria-describedby={describedByIds || undefined}
         maxLength={maxLength}
-        {...(props as any)}
+        value={controlledValue !== undefined ? controlledValue : undefined}
+        onChange={controlledValue !== undefined ? onChange : handleChange}
+        {...props}
       />
 
-      {/* Character count */}
       {showCharCount && maxLength && (
         <span id={charCountId} className="form-helper" style={{ display: 'block', marginTop: '0.5rem' }}>
-          {0} / {maxLength} characters
+          {currentValue.length} / {maxLength} characters
         </span>
       )}
 

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Search } from 'lucide-react'
-import { searchArticles } from '../firebase/articles'
+import { searchArticles } from '../supabase/articles'
 import ArticleCard from '../components/article/ArticleCard'
 import { SkeletonCard, SkeletonLine } from '../components/common/SkeletonLoader'
 import { useLocation } from 'react-router-dom'
@@ -15,25 +15,33 @@ export default function SearchPage({ onNavigate }: SearchPageProps) {
   const [query, setQuery] = useState(() => location.state?.query || '')
   const [results, setResults] = useState<Article[]>([])
   const [loading, setLoading] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
   useEffect(() => {
-    let cancelled = false
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
     if (query.length < 2) {
       setResults([])
       setLoading(false)
       return
     }
+
     setLoading(true)
-    void (async () => {
-      try {
-        const r = await searchArticles(query)
-        if (!cancelled) setResults(r)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
+    debounceRef.current = setTimeout(() => {
+      let cancelled = false
+      void (async () => {
+        try {
+          const r = await searchArticles(query)
+          if (!cancelled) setResults(r)
+        } finally {
+          if (!cancelled) setLoading(false)
+        }
+      })()
+      return () => { cancelled = true }
+    }, 300)
+
     return () => {
-      cancelled = true
+      if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [query])
 

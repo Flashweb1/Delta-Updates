@@ -16,7 +16,7 @@ export function initReactSentry(dsn: string) {
       // @ts-ignore - Replay may not exist in all versions
       new Replay(),
     ],
-    tracesSampleRate: 1.0,
+    tracesSampleRate: 0.1,
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
   })

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import type { Article } from '../data/articles'
-import { getFeaturedArticles, getLatestArticles, getArticlesByCategory } from '../firebase/articles'
+import { getFeaturedArticles, getLatestArticles, getArticlesByCategory } from '../supabase/articles'
 import HeroSection from '../components/home/HeroSection'
 import TopStoriesSidebar from '../components/home/TopStoriesSidebar'
 import LatestStoriesGrid from '../components/home/LatestStoriesGrid'
@@ -30,13 +30,17 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     setLoading(true)
     let cancelled = false
 
-    void Promise.all([
+    void Promise.allSettled([
       getFeaturedArticles(12),
       getLatestArticles(24),
       getArticlesByCategory('Politics'),
       getArticlesByCategory('Business'),
-    ]).then(([f, l, p, b]) => {
+    ]).then((results) => {
       if (cancelled) return
+      const f = results[0].status === 'fulfilled' ? results[0].value : []
+      const l = results[1].status === 'fulfilled' ? results[1].value : []
+      const p = results[2].status === 'fulfilled' ? results[2].value : []
+      const b = results[3].status === 'fulfilled' ? results[3].value : []
       setFeatured(f)
       setLatest(l)
       setPolitics(p.slice(0, 5))
@@ -44,9 +48,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       setLoading(false)
     })
 
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [])
 
   return (

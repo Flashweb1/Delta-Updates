@@ -15,7 +15,7 @@ export default function Footer({ onNavigate }: FooterProps) {
       <div className="footer-inner">
         <div className="footer-brand">
           <div className="footer-logo">
-            Bjlinks<span className="accent"> News</span>
+            Delta<span className="accent"> Update</span>
           </div>
           <p className="footer-tagline">Information for living</p>
         </div>
@@ -33,7 +33,7 @@ export default function Footer({ onNavigate }: FooterProps) {
 
         <div className="footer-about">
           <h4>About</h4>
-          <p>Bjlinks News delivers premium journalism covering politics, business, technology, and more from Nigeria and around the world.</p>
+          <p>Delta Update delivers premium journalism covering politics, business, technology, and more from Nigeria and around the world.</p>
         </div>
 
         <div className="footer-social">
@@ -48,7 +48,7 @@ export default function Footer({ onNavigate }: FooterProps) {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; {year} Bjlinks News. All rights reserved.</p>
+        <p>&copy; {year} Delta Update. All rights reserved.</p>
         <div className="footer-legal">
           <button onClick={() => onNavigate('/privacy')}>Privacy Policy</button>
           <button onClick={() => onNavigate('/terms')}>Terms of Service</button>

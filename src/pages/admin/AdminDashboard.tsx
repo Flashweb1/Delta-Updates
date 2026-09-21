@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { FileText, Eye, Clock, AlertCircle } from 'lucide-react'
 import type { Article } from '../../data/articles'
-import { getAllArticlesAdmin } from '../../firebase/articles'
+import { getAllArticlesAdmin } from '../../supabase/articles'
 import AdminLayout from '../../components/admin/AdminLayout'
 import RecentArticlesTable from '../../components/admin/RecentArticlesTable'
 import RecentActivity from '../../components/admin/RecentActivity'
 import TopPerformingStories from '../../components/admin/TopPerformingStories'
 import ContentPerformanceChart from '../../components/admin/ContentPerformanceChart'
 import PublishingOverview from '../../components/admin/PublishingOverview'
+import { logger } from '../../utils/logger'
 
 interface AdminDashboardProps {
   onNavigate: (path: string) => void
@@ -62,8 +63,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           reviews: fetched.filter((a) => a.status === 'review').length,
         })
       } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : String(error)
-        console.error('[admin] Error loading dashboard data:', msg)
+        logger.error('[admin] Error loading dashboard data', error)
       } finally {
         setLoading(false)
       }

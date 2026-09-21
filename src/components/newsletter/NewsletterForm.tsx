@@ -59,7 +59,7 @@ export default function NewsletterForm({ variant = 'banner' }: NewsletterFormPro
       </div>
       {subscribed ? (
         <div className="newsletter-success">
-          <Check size={20} /> Thank you for subscribing to Bjlinks Daily Digest.
+          <Check size={20} /> Thank you for subscribing to Delta Update Daily Digest.
         </div>
       ) : (
         <form className="newsletter-form" onSubmit={handleSubscribe}>

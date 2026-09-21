@@ -3,7 +3,8 @@ import { ArrowLeft, Save, Eye, Send, Sparkles, Tag, FileText, Wand2, Loader2, Ch
 import { generateDek, suggestTags, generateSEODescription, improveText, isAIEnabled } from '../../utils/ai'
 import type { Article } from '../../data/articles'
 import { categories } from '../../data/articles'
-import { addArticle, updateArticle, getArticleById, generateUniqueSlug } from '../../firebase/articles'
+import { addArticle, updateArticle, getArticleById, generateUniqueSlug } from '../../supabase/articles'
+import { uploadImageFile } from '../../supabase/storage'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -14,16 +15,17 @@ import {
   normalizeSlug,
   sanitizePlainText,
 } from '../../utils/security'
+import { logger } from '../../utils/logger'
 
 interface ArticleEditorProps {
   onNavigate: (path: string) => void
   articleId?: string
 }
 
-type Status = 'draft' | 'review'
+type Status = 'draft' | 'review' | 'published'
 
 export default function ArticleEditor({ onNavigate, articleId }: ArticleEditorProps) {
-  const { user } = useAuth()
+  const { user, isApproved } = useAuth()
   const navigate = useNavigate()
 
   const [existingArticle, setExistingArticle] = useState<Article | null>(null)
@@ -33,6 +35,8 @@ export default function ArticleEditor({ onNavigate, articleId }: ArticleEditorPr
   const [body, setBody] = useState<string>('')
   const [tags, setTags] = useState<string>('')
   const [image, setImage] = useState<string>('')
+  const [fileUploading, setFileUploading] = useState<boolean>(false)
+  const [uploadProgress, setUploadProgress] = useState<number>(0)
   const [readTime, setReadTime] = useState<number>(3)
   const [showPreview, setShowPreview] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
@@ -70,7 +74,7 @@ export default function ArticleEditor({ onNavigate, articleId }: ArticleEditorPr
         setReadTime(Number(found.readTime) || 3)
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err)
-        console.error('[editor] Error loading article:', msg)
+        logger.error('[editor] Error loading article', msg)
       }
     })()
     return () => {
@@ -108,7 +112,9 @@ export default function ArticleEditor({ onNavigate, articleId }: ArticleEditorPr
       .slice(0, 10)
 
     const safeImage = image ? (isValidExternalUrl(image) ? image : '') : ''
-    const slug = normalizeSlug(`${cleanTitle || 'article'}${existingArticle?.slug || ''}`) || `article-${Date.now()}`
+    const slug = existingArticle?.slug
+      ? existingArticle.slug
+      : normalizeSlug(cleanTitle || 'article') || `article-${Date.now()}`
 
     if (!cleanTitle || !cleanDek || paragraphs.length === 0 || !isValidTags(tagArr)) {
       setError('Please fill in headline, dek, body, and up to 10 tags (max 32 chars).')
@@ -136,6 +142,23 @@ export default function ArticleEditor({ onNavigate, articleId }: ArticleEditorPr
       author,
       authorRole,
       publishedAt,
+    }
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setFileUploading(true)
+    setUploadProgress(0)
+    try {
+      const url = await uploadImageFile(file, (p) => setUploadProgress(p))
+      setImage(url)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Upload failed'
+      setError(`Image upload failed: ${msg}`)
+    } finally {
+      setFileUploading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -252,12 +275,18 @@ export default function ArticleEditor({ onNavigate, articleId }: ArticleEditorPr
           <button className="btn-secondary" onClick={() => setShowPreview((s) => !s)}>
             <Eye size={16} /> {showPreview ? 'Edit' : 'Preview'}
           </button>
-          <button className="btn-secondary" onClick={() => handleSave('draft')} disabled={loading}>
+          <button className="btn-secondary" onClick={() => handleSave('draft')} disabled={loading || fileUploading}>
             <Save size={16} /> Save Draft
           </button>
-          <button className="btn-primary" onClick={() => handleSave('review')} disabled={loading}>
-            <Send size={16} /> Submit for Review
-          </button>
+          {isApproved ? (
+            <button className="btn-primary" onClick={() => handleSave('published')} disabled={loading || fileUploading}>
+              <Send size={16} /> Post
+            </button>
+          ) : (
+            <button className="btn-primary" onClick={() => handleSave('review')} disabled={loading || fileUploading}>
+              <Send size={16} /> Submit for Review
+            </button>
+          )}
         </div>
       </div>
 
@@ -461,7 +490,7 @@ export default function ArticleEditor({ onNavigate, articleId }: ArticleEditorPr
           </div>
 
           <div className="form-group">
-            <label htmlFor="image">Cover Image URL</label>
+            <label htmlFor="image">Cover Image</label>
             <input
               id="image"
               type="url"
@@ -469,6 +498,12 @@ export default function ArticleEditor({ onNavigate, articleId }: ArticleEditorPr
               value={image}
               onChange={(e) => setImage(e.target.value)}
             />
+            <div className="image-upload-row">
+              <input id="imageFile" type="file" accept="image/*" onChange={handleFileChange} />
+              {fileUploading && (
+                <div className="upload-progress">Uploading {uploadProgress}%</div>
+              )}
+            </div>
             {image && isValidExternalUrl(image) && (
               <img src={image} alt="Preview" className="image-preview" />
             )}

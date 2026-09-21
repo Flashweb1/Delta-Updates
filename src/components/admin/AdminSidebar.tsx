@@ -1,6 +1,7 @@
 import { LayoutDashboard, FileText, Image, MessageSquare, BarChart3, Users, Settings, PlusCircle, Eye, LogOut, FolderTree, LayoutTemplate } from 'lucide-react'
-import { signOut } from 'firebase/auth'
-import { auth } from '../../firebase/init'
+import { signOutUser } from '../../supabase/auth'
+import { useAuth } from '../../contexts/AuthContext'
+import { logger } from '../../utils/logger'
 
 interface AdminSidebarProps {
   currentPage: string
@@ -36,18 +37,18 @@ const managementNavItems: NavItem[] = [
 ]
 
 export default function AdminSidebar({ currentPage, onNavigate, notificationBadge, onLogout }: AdminSidebarProps) {
-  const user = auth.currentUser
+  const { user } = useAuth()
   const userInitial = user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'A'
   const userName = user?.displayName || user?.email?.split('@')[0] || 'Editor'
   const userRole = 'Administrator'
 
   const handleLogout = async () => {
     try {
-      await signOut(auth)
+      await signOutUser()
       onLogout?.()
       onNavigate('/admin/login')
     } catch (error) {
-      console.error('Logout error:', error)
+      logger.error('Logout error', error)
     }
   }
 
@@ -57,7 +58,7 @@ export default function AdminSidebar({ currentPage, onNavigate, notificationBadg
       <div className="sidebar-branding">
         <img
           src="/Logo Icon.png"
-          alt="Bjlinks"
+          alt="Delta Update"
           className="sidebar-logo-icon"
           style={{
             width: '36px',
@@ -67,7 +68,7 @@ export default function AdminSidebar({ currentPage, onNavigate, notificationBadg
           }}
         />
         <div className="sidebar-logo-text">
-          <div className="sidebar-logo-text-main">Bjlinks</div>
+          <div className="sidebar-logo-text-main">Delta Update</div>
           <div className="sidebar-logo-text-sub">Admin</div>
         </div>
       </div>

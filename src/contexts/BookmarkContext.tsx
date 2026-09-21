@@ -8,7 +8,7 @@ interface BookmarkContextType {
   clearBookmarks: () => void
 }
 
-const STORAGE_KEY = 'bjlinks-bookmarks'
+const STORAGE_KEY = 'delta-bookmarks'
 const MAX_BOOKMARKS = 500
 
 const BookmarkContext = createContext<BookmarkContextType>({

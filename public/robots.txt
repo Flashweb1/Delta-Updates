@@ -8,4 +8,4 @@ Disallow: /api/
 Crawl-delay: 1
 
 # Sitemap
-Sitemap: https://bjlinks-news.vercel.app/sitemap.xml
+Sitemap: https://deltaupdates.vercel.app/sitemap.xml
