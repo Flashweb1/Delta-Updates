@@ -29,7 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (DEV_BYPASS_AUTH) {
-      // Use first allowlisted admin email for dev bypass so previewing admin flows works
+      // Use first allowlisted admin email for dev bypass so previewing admin flows works.
+      // The editor treats isApproved as the gate for publishing, so the bypass must set it true.
       const list = (import.meta.env.VITE_ADMIN_EMAILS || '')
         .split(',')
         .map((s) => s.trim())
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const devEmail = list[0] || 'dev@deltaupdates.test'
       setUser({ email: devEmail, uid: 'dev-user-123', displayName: 'Dev Admin', emailVerified: true } as AuthUser)
       setIsAdmin(true)
+      setIsApproved(true)
       setLoading(false)
       return
     }

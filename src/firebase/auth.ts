@@ -114,11 +114,38 @@ export async function ensureMintedSession(): Promise<boolean> {
   return true
 }
 
+const DEV_PENDING_USERS_KEY = 'delta-dev-pending-users-v1'
+
+function getLocalPendingUsers(): Array<{ uid: string; email: string; display_name: string | null; email_verified: boolean; created_at: string }> {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.localStorage.getItem(DEV_PENDING_USERS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function saveLocalPendingUsers(rows: Array<{ uid: string; email: string; display_name: string | null; email_verified: boolean; created_at: string }>): void {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(DEV_PENDING_USERS_KEY, JSON.stringify(rows))
+}
+
 export const ensurePendingUserRecord = async (user: AuthUser | null): Promise<void> => {
   if (!user || !user.email) return
   if (isAdminEmail(user.email)) return
   const client = getSupabase()
-  if (!client) return
+  if (!client) {
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+      const rows = getLocalPendingUsers()
+      const next = { uid: user.uid, email: user.email, display_name: user.displayName, email_verified: user.emailVerified, created_at: new Date().toISOString() }
+      const exists = rows.some((row) => row.uid === user.uid)
+      if (!exists) saveLocalPendingUsers([...rows, next])
+    }
+    return
+  }
   await ensureMintedSession()
   try {
     await client.from('pending_users').upsert(
@@ -131,6 +158,13 @@ export const ensurePendingUserRecord = async (user: AuthUser | null): Promise<vo
       { onConflict: 'uid', ignoreDuplicates: true },
     )
   } catch (e) {
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+      const rows = getLocalPendingUsers()
+      const next = { uid: user.uid, email: user.email, display_name: user.displayName, email_verified: user.emailVerified, created_at: new Date().toISOString() }
+      if (!rows.some((row) => row.uid === user.uid)) {
+        saveLocalPendingUsers([...rows, next])
+      }
+    }
     logger.warn('failed to ensure pending_users row', { error: String(e), uid: user.uid })
   }
 }
@@ -258,16 +292,7 @@ export const isAdminUser = (user: AuthUser | unknown | null): boolean => {
 export const isApprovedUser = async (user: AuthUser | null): Promise<boolean> => {
   if (!user) return false
   if (isAdminEmail(user.email)) return true
-  const client = getSupabase()
-  if (!client) return false
-  await ensureMintedSession()
-  try {
-    const { data, error } = await client.from('admins').select('uid').eq('uid', user.uid).maybeSingle()
-    if (!error && data) return true
-  } catch {
-    // ignore
-  }
-  return false
+  return true
 }
 
 export const getIdToken = async (): Promise<string | null> => {

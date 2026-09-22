@@ -36,7 +36,6 @@ const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'))
 const HomepagePage = lazy(() => import('./pages/admin/HomepagePage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
-const PendingApprovalPage = lazy(() => import('./pages/PendingApprovalPage'))
 
 type PageKind =
   | 'home'
@@ -244,7 +243,6 @@ function Layout() {
               <Route path="/search" element={<SearchPage onNavigate={navigate} />} />
               <Route path="/bookmarks" element={<BookmarksPage onNavigate={navigate} />} />
               <Route path="/admin/login" element={<AdminLogin onNavigate={navigate} />} />
-              <Route path="/pending" element={<PendingApprovalPage onNavigate={navigate} />} />
               <Route
                 path="/admin"
                 element={

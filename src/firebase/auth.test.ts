@@ -85,7 +85,8 @@ describe('ensurePendingUserRecord', () => {
     })
   })
 
-  it('does nothing when Supabase is not configured', async () => {
+  it('stores pending signups locally in dev when Supabase is not configured', async () => {
+    window.localStorage.clear()
     const { ensurePendingUserRecord } = await import('./auth')
 
     await ensurePendingUserRecord({
@@ -95,7 +96,32 @@ describe('ensurePendingUserRecord', () => {
       emailVerified: true,
     })
 
+    const raw = window.localStorage.getItem('delta-dev-pending-users-v1')
+    expect(raw).toContain('"uid":"abc123"')
     expect(upsert).not.toHaveBeenCalled()
+  })
+
+  it('treats a non-admin account as approved immediately', async () => {
+    getSupabase.mockReturnValue({
+      auth: {
+        getSession: async () => ({
+          data: { session: { access_token: 'valid', expires_at: Math.floor(Date.now() / 1000) + 600 } },
+        }),
+      },
+      from: () => ({
+        select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }),
+      }),
+    })
+
+    const { isApprovedUser } = await import('./auth')
+    const approved = await isApprovedUser({
+      uid: 'guest123',
+      email: 'reader@example.com',
+      displayName: 'Reader',
+      emailVerified: true,
+    })
+
+    expect(approved).toBe(true)
   })
 
   it('does not create a pending_users record for an admin email', async () => {

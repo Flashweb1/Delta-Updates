@@ -6,6 +6,37 @@ import { logErrorToSentry } from '../utils/sentry'
 
 const IS_DEV = import.meta.env.DEV === true
 const IN_BATCH = 30
+const DEV_ARTICLES_KEY = 'delta-dev-articles-v1'
+
+function getLocalArticles(): Article[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.localStorage.getItem(DEV_ARTICLES_KEY)
+    if (!raw) return [...sampleArticles]
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : [...sampleArticles]
+  } catch {
+    return [...sampleArticles]
+  }
+}
+
+function saveLocalArticles(list: Article[]): void {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(DEV_ARTICLES_KEY, JSON.stringify(list))
+}
+
+function mergeDevArticleSets(remote: Article[], local: Article[]): Article[] {
+  const map = new Map<string, Article>()
+  for (const item of [...remote, ...local]) {
+    const key = item.id || item.slug || item.title
+    if (!map.has(key)) map.set(key, item)
+  }
+  return [...map.values()].sort((a, b) => {
+    const aTime = a.createdAt?.getTime?.() ?? Date.parse(a.publishedAt || '1970-01-01')
+    const bTime = b.createdAt?.getTime?.() ?? Date.parse(b.publishedAt || '1970-01-01')
+    return bTime - aTime
+  })
+}
 
 /** Raw row shape from the articles table. */
 interface ArticleRow {
@@ -273,76 +304,167 @@ export const searchArticles = async (queryText: string): Promise<Article[]> => {
 
 export const addArticle = async (articleData: Omit<Article, 'id'>): Promise<Article> => {
   const client = getClient()
-  if (!client) throw new Error('Supabase is not configured.')
-  const { data, error } = await client
-    .from('articles')
-    .insert({
-      title: articleData.title,
-      dek: articleData.dek,
-      body: articleData.body,
-      category: articleData.category,
-      tags: articleData.tags,
-      author: articleData.author,
-      author_role: articleData.authorRole,
-      published_at: articleData.publishedAt,
-      image: articleData.image,
-      slug: articleData.slug,
-      read_time: articleData.readTime,
-      featured: articleData.featured ?? false,
-      status: articleData.status,
-    })
-    .select('*')
-    .single()
-  if (error) throw error
-  return toArticle(data as ArticleRow)
+  if (!client) {
+    if (IS_DEV && typeof window !== 'undefined') {
+      const next: Article = {
+        ...articleData,
+        id: `dev-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+      const list = getLocalArticles()
+      saveLocalArticles([next, ...list])
+      return next
+    }
+    throw new Error('Supabase is not configured.')
+  }
+
+  try {
+    const { data, error } = await client
+      .from('articles')
+      .insert({
+        title: articleData.title,
+        dek: articleData.dek,
+        body: articleData.body,
+        category: articleData.category,
+        tags: articleData.tags,
+        author: articleData.author,
+        author_role: articleData.authorRole,
+        published_at: articleData.publishedAt,
+        image: articleData.image,
+        slug: articleData.slug,
+        read_time: articleData.readTime,
+        featured: articleData.featured ?? false,
+        status: articleData.status,
+      })
+      .select('*')
+      .single()
+    if (error) throw error
+    return toArticle(data as ArticleRow)
+  } catch (error) {
+    if (IS_DEV && typeof window !== 'undefined') {
+      const next: Article = {
+        ...articleData,
+        id: `dev-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+      const list = getLocalArticles()
+      saveLocalArticles([next, ...list])
+      return next
+    }
+    throw error
+  }
 }
 
 export const updateArticle = async (articleId: string, articleData: Partial<Article>): Promise<Article> => {
   const client = getClient()
-  if (!client) throw new Error('Supabase is not configured.')
-  const patch: Record<string, unknown> = {}
-  if (articleData.title !== undefined) patch.title = articleData.title
-  if (articleData.dek !== undefined) patch.dek = articleData.dek
-  if (articleData.body !== undefined) patch.body = articleData.body
-  if (articleData.category !== undefined) patch.category = articleData.category
-  if (articleData.tags !== undefined) patch.tags = articleData.tags
-  if (articleData.author !== undefined) patch.author = articleData.author
-  if (articleData.authorRole !== undefined) patch.author_role = articleData.authorRole
-  if (articleData.publishedAt !== undefined) patch.published_at = articleData.publishedAt
-  if (articleData.image !== undefined) patch.image = articleData.image
-  if (articleData.slug !== undefined) patch.slug = articleData.slug
-  if (articleData.readTime !== undefined) patch.read_time = articleData.readTime
-  if (articleData.featured !== undefined) patch.featured = articleData.featured
-  if (articleData.status !== undefined) patch.status = articleData.status
+  if (!client) {
+    if (IS_DEV && typeof window !== 'undefined') {
+      const list = getLocalArticles()
+      const index = list.findIndex((article) => article.id === articleId)
+      if (index < 0) throw new Error('Article not found in local dev store.')
+      const updated = { ...list[index], ...articleData, updatedAt: new Date() }
+      list[index] = updated
+      saveLocalArticles(list)
+      return updated
+    }
+    throw new Error('Supabase is not configured.')
+  }
 
-  const { data, error } = await client
-    .from('articles')
-    .update(patch)
-    .eq('id', articleId)
-    .select('*')
-    .single()
-  if (error) throw error
-  return toArticle(data as ArticleRow)
+  try {
+    const patch: Record<string, unknown> = {}
+    if (articleData.title !== undefined) patch.title = articleData.title
+    if (articleData.dek !== undefined) patch.dek = articleData.dek
+    if (articleData.body !== undefined) patch.body = articleData.body
+    if (articleData.category !== undefined) patch.category = articleData.category
+    if (articleData.tags !== undefined) patch.tags = articleData.tags
+    if (articleData.author !== undefined) patch.author = articleData.author
+    if (articleData.authorRole !== undefined) patch.author_role = articleData.authorRole
+    if (articleData.publishedAt !== undefined) patch.published_at = articleData.publishedAt
+    if (articleData.image !== undefined) patch.image = articleData.image
+    if (articleData.slug !== undefined) patch.slug = articleData.slug
+    if (articleData.readTime !== undefined) patch.read_time = articleData.readTime
+    if (articleData.featured !== undefined) patch.featured = articleData.featured
+    if (articleData.status !== undefined) patch.status = articleData.status
+
+    const { data, error } = await client
+      .from('articles')
+      .update(patch)
+      .eq('id', articleId)
+      .select('*')
+      .single()
+    if (error) throw error
+    return toArticle(data as ArticleRow)
+  } catch (error) {
+    if (IS_DEV && typeof window !== 'undefined') {
+      const list = getLocalArticles()
+      const index = list.findIndex((article) => article.id === articleId)
+      if (index < 0) throw error
+      const updated = { ...list[index], ...articleData, updatedAt: new Date() }
+      list[index] = updated
+      saveLocalArticles(list)
+      return updated
+    }
+    throw error
+  }
 }
 
 export const deleteArticle = async (articleId: string): Promise<void> => {
   const client = getClient()
-  if (!client) throw new Error('Supabase is not configured.')
-  const { error } = await client.from('articles').delete().eq('id', articleId)
-  if (error) throw error
+  if (!client) {
+    if (IS_DEV && typeof window !== 'undefined') {
+      const list = getLocalArticles().filter((article) => article.id !== articleId)
+      saveLocalArticles(list)
+      return
+    }
+    throw new Error('Supabase is not configured.')
+  }
+
+  try {
+    const { error } = await client.from('articles').delete().eq('id', articleId)
+    if (error) throw error
+  } catch (error) {
+    if (IS_DEV && typeof window !== 'undefined') {
+      const list = getLocalArticles().filter((article) => article.id !== articleId)
+      saveLocalArticles(list)
+      return
+    }
+    throw error
+  }
 }
 
 export const getArticleById = async (articleId: string): Promise<Article | undefined> => {
   const client = getClient()
-  if (!client) return undefined
-  const { data, error } = await client.from('articles').select('*').eq('id', articleId).maybeSingle()
-  if (error || !data) return undefined
-  return toArticle(data as ArticleRow)
+  if (!client) {
+    if (IS_DEV && typeof window !== 'undefined') {
+      return getLocalArticles().find((article) => article.id === articleId)
+    }
+    return undefined
+  }
+  try {
+    const { data, error } = await client.from('articles').select('*').eq('id', articleId).maybeSingle()
+    if (error || !data) {
+      if (IS_DEV && typeof window !== 'undefined') {
+        return getLocalArticles().find((article) => article.id === articleId)
+      }
+      return undefined
+    }
+    return toArticle(data as ArticleRow)
+  } catch {
+    if (IS_DEV && typeof window !== 'undefined') {
+      return getLocalArticles().find((article) => article.id === articleId)
+    }
+    return undefined
+  }
 }
 
 export const getAllArticlesAdmin = async (): Promise<Article[]> => {
   const client = getClient()
-  if (!client) return []
+  if (!client) {
+    if (IS_DEV && typeof window !== 'undefined') return getLocalArticles()
+    return []
+  }
   try {
     const { data, error } = await client
       .from('articles')
@@ -350,8 +472,14 @@ export const getAllArticlesAdmin = async (): Promise<Article[]> => {
       .order('created_at', { ascending: false })
       .limit(500)
     if (error) throw error
-    return ((data ?? []) as ArticleRow[]).map(toArticle)
+    const rows = ((data ?? []) as ArticleRow[]).map(toArticle)
+    if (IS_DEV && typeof window !== 'undefined') {
+      const local = getLocalArticles()
+      if (local.length > 0) return mergeDevArticleSets(rows, local)
+    }
+    return rows
   } catch {
+    if (IS_DEV && typeof window !== 'undefined') return getLocalArticles()
     return []
   }
 }

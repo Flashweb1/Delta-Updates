@@ -88,14 +88,7 @@ export default function AdminLogin({ onNavigate }: AdminLoginProps) {
           return
         }
 
-        const approved = await isApprovedUser(res.user)
-        if (approved && emailAddr && isAdminEmail(emailAddr)) {
-          goto('/admin')
-        } else if (approved) {
-          goto('/')
-        } else {
-          goto('/pending')
-        }
+        goto('/')
       }
     } catch (err: unknown) {
       setError(errorMessage(err))
@@ -126,14 +119,7 @@ export default function AdminLogin({ onNavigate }: AdminLoginProps) {
         return
       }
 
-      const approved = res.user ? await isApprovedUser(res.user) : false
-      if (approved && emailAddr && isAdminEmail(emailAddr)) {
-        goto('/admin')
-      } else if (approved) {
-        goto('/')
-      } else {
-        goto('/pending')
-      }
+      goto('/')
     } catch (err: unknown) {
       setError(errorMessage(err))
     } finally {
