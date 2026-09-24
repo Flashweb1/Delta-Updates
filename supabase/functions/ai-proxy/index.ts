@@ -67,28 +67,51 @@ async function openrouterCompletion(
   const key = envSecret('OPENROUTER_API_KEY')
   if (!key) throw new Error('OPENROUTER_API_KEY not configured')
   const base = envSecret('OPENROUTER_BASE_URL') || 'https://openrouter.ai/api/v1'
-  const model = envSecret('OPENROUTER_MODEL') || 'nex-agi/nex-n2.5-mini:free'
+  const configuredModel = (envSecret('OPENROUTER_MODEL') || '').trim()
+  const fallbackModels = ['nex-agi/nex-n2.5-mini:free', 'openai/gpt-4o-mini']
+  const modelOrder = configuredModel ? [configuredModel, ...fallbackModels.filter((m) => m !== configuredModel)] : fallbackModels
 
-  const res = await fetch(`${base}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
-      'HTTP-Referer': 'https://deltaupdates.vercel.app',
-      'X-Title': 'Delta Update',
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: options.temperature ?? 0.7,
-      max_tokens: options.max_tokens ?? 512,
-    }),
-  })
-  if (!res.ok) {
-    throw new Error(`OpenRouter API error ${res.status}: ${await res.text()}`)
+  let lastError = 'OpenRouter request failed'
+
+  for (const model of modelOrder) {
+    try {
+      const res = await fetch(`${base}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${key}`,
+          'HTTP-Referer': 'https://deltaupdates.vercel.app',
+          'X-Title': 'Delta Update',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: options.temperature ?? 0.7,
+          max_tokens: options.max_tokens ?? 512,
+        }),
+      })
+
+      if (!res.ok) {
+        const errText = await res.text()
+        lastError = `OpenRouter API error ${res.status}: ${errText}`
+        const unavailable = /unavailable|not found|No endpoints found|404/i.test(errText)
+        if (unavailable) continue
+        throw new Error(lastError)
+      }
+
+      const data = await res.json()
+      const content = data.choices?.[0]?.message?.content?.trim() ?? ''
+      if (!content) {
+        lastError = 'OpenRouter returned empty content'
+        continue
+      }
+      return content
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error)
+    }
   }
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content?.trim() ?? ''
+
+  throw new Error(lastError)
 }
 
 // ── Gemini (fallback) ───────────────────────────────────────────────

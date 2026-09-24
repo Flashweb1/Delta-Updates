@@ -364,7 +364,26 @@ export const updateArticle = async (articleId: string, articleData: Partial<Arti
       const list = getLocalArticles()
       const index = list.findIndex((article) => article.id === articleId)
       if (index < 0) throw new Error('Article not found in local dev store.')
-      const updated = { ...list[index], ...articleData, updatedAt: new Date() }
+      const base = list[index]
+      if (!base) throw new Error('Article not found in local dev store.')
+      const updated: Article = {
+        id: articleId,
+        title: articleData.title ?? base.title,
+        dek: articleData.dek ?? base.dek,
+        body: articleData.body ?? base.body,
+        category: articleData.category ?? base.category,
+        tags: articleData.tags ?? base.tags,
+        author: articleData.author ?? base.author,
+        authorRole: articleData.authorRole ?? base.authorRole,
+        publishedAt: articleData.publishedAt ?? base.publishedAt,
+        image: articleData.image ?? base.image,
+        slug: articleData.slug ?? base.slug,
+        readTime: articleData.readTime ?? base.readTime,
+        featured: articleData.featured ?? base.featured ?? false,
+        status: articleData.status ?? base.status,
+        createdAt: base.createdAt,
+        updatedAt: new Date(),
+      }
       list[index] = updated
       saveLocalArticles(list)
       return updated
@@ -401,7 +420,26 @@ export const updateArticle = async (articleId: string, articleData: Partial<Arti
       const list = getLocalArticles()
       const index = list.findIndex((article) => article.id === articleId)
       if (index < 0) throw error
-      const updated = { ...list[index], ...articleData, updatedAt: new Date() }
+      const base = list[index]
+      if (!base) throw error
+      const updated: Article = {
+        id: articleId,
+        title: articleData.title ?? base.title,
+        dek: articleData.dek ?? base.dek,
+        body: articleData.body ?? base.body,
+        category: articleData.category ?? base.category,
+        tags: articleData.tags ?? base.tags,
+        author: articleData.author ?? base.author,
+        authorRole: articleData.authorRole ?? base.authorRole,
+        publishedAt: articleData.publishedAt ?? base.publishedAt,
+        image: articleData.image ?? base.image,
+        slug: articleData.slug ?? base.slug,
+        readTime: articleData.readTime ?? base.readTime,
+        featured: articleData.featured ?? base.featured ?? false,
+        status: articleData.status ?? base.status,
+        createdAt: base.createdAt,
+        updatedAt: new Date(),
+      }
       list[index] = updated
       saveLocalArticles(list)
       return updated
